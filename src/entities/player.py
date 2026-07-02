@@ -5,6 +5,7 @@ class Player:
     def __init__(self):
 
         # setting up the image for the player sprite
+        self.on_ground = None
         self.wizarb_image = pg.image.load("images/assets/wizarb.png")
 
         # player hitbox
@@ -13,31 +14,51 @@ class Player:
         self.rect.y = 72
 
         self.vel_y = 0
+        self.vel_x = 0
         self.speed = 5
         self.gravity = 0.5
-        self.jump_height = 16
+        self.jump_height = 14
+        self.jump_counter = 0
+        self.allowed_jump_count = 1
 
-    #def is_airborne(self):
-    #    if self.vel_y != 0:
-    #        return True
-    #    else:
-    #        return False
+    def update(self, level):
 
-    def update(self):
+        # horizontal movement
         keys = pg.key.get_pressed()
 
+        self.vel_x = 0
+
         if keys[pg.K_LEFT]:
-            self.rect.x -= self.speed
+            self.vel_x = -self.speed
 
         if keys[pg.K_RIGHT]:
-            self.rect.x += self.speed
+            self.vel_x = self.speed
 
-        if keys[pg.K_UP]:
-            self.rect.y -= self.jump_height
-            #airborne = self.is_airborne()
-           # while airborne:
+        self.rect.x += self.vel_x
+
+
+        for collider in level.platforms:
+            if self.rect.colliderect(collider):
+                if self.vel_x > 0:
+                    self.rect.right = collider.left
+                elif self.vel_x < 0:
+                    self.rect.left = collider.right
+
+        # vertical movement
         self.vel_y += self.gravity
         self.rect.y += self.vel_y
+
+        for collider in level.platforms:
+            if self.rect.colliderect(collider):
+                if self.vel_y > 0:
+                    self.rect.bottom = collider.top
+                    self.vel_y = 0
+                    self.on_ground = True
+                    self.jump_counter = 0
+
+                elif self.vel_y < 0:
+                    self.rect.top = collider.bottom
+                    self.vel_y = 0
 
 
     def draw(self, screen):
